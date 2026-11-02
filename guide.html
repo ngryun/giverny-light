@@ -1,0 +1,520 @@
+<title>수업 게임 배포하기</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap">
+<style>
+:root{
+  /* 레이아웃: 왼쪽에 단계 목차가 따라오는 한 줄 읽기 안내서. 1부(웹에서 직접)는 초록, 2부(AI에게 맡기기)는 장밋빛으로 구분한다. */
+  --bg:#f3f5f1; --surface:#ffffff; --sunk:#e8ede6; --ink:#15221c; --muted:#56655c; --line:#d2dad0;
+  --green:#2b684a; --green-soft:#dcebe0; --rose:#a9443b; --rose-soft:#f5e0dc; --warn:#8a5a00; --warn-soft:#fbefd2;
+  --term:#101a15; --term-ink:#e4eee7; --term-muted:#8fa79a; --term-line:#24352c;
+  --f-display:"Gowun Batang","Nanum Myeongjo","AppleMyungjo",serif;
+  --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1713; --surface:#16211c; --sunk:#1c2a23; --ink:#e6ede7; --muted:#9fb2a6; --line:#2a3b32;
+  --green:#7cc39b; --green-soft:#1d3a2b; --rose:#ee9a90; --rose-soft:#3d2320; --warn:#f2c467; --warn-soft:#3a2e14;
+  --term:#0a110d; --term-ink:#e4eee7; --term-muted:#8fa79a; --term-line:#22322a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1713; --surface:#16211c; --sunk:#1c2a23; --ink:#e6ede7; --muted:#9fb2a6; --line:#2a3b32;
+  --green:#7cc39b; --green-soft:#1d3a2b; --rose:#ee9a90; --rose-soft:#3d2320; --warn:#f2c467; --warn-soft:#3a2e14;
+  --term:#0a110d; --term-ink:#e4eee7; --term-muted:#8fa79a; --term-line:#22322a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16.5px;line-height:1.75;-webkit-font-smoothing:antialiased}
+a{color:var(--green);text-underline-offset:3px}
+:focus-visible{outline:2px solid var(--rose);outline-offset:2px;border-radius:4px}
+h1,h2,h3{text-wrap:balance;font-family:var(--f-display);font-weight:700;line-height:1.3;margin:0}
+p{margin:0}
+code,kbd{font-family:var(--f-mono);font-size:.88em}
+code{background:var(--sunk);padding:.1em .35em;border-radius:4px;overflow-wrap:anywhere}
+.page{max-width:1140px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 80px;display:grid;grid-template-columns:220px minmax(0,1fr);gap:56px}
+@media (max-width:900px){.page{grid-template-columns:minmax(0,1fr);gap:0;padding-block:24px 64px}}
+
+/* 목차 */
+.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 28px);align-self:start;font-size:.9rem;display:grid;gap:18px}
+.toc .lbl{font-size:.74rem;letter-spacing:.12em;color:var(--muted);margin-bottom:6px}
+.toc ol{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.toc a{display:flex;gap:10px;align-items:baseline;padding:4px 8px;border-radius:6px;color:var(--ink);text-decoration:none}
+.toc a:hover{background:var(--sunk)}
+.toc .n{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);width:1.4em;flex:none;font-variant-numeric:tabular-nums}
+.toc a.done .n{color:var(--green)}
+.toc a.done .t{text-decoration:line-through;text-decoration-color:var(--muted)}
+.toc .p1 .lbl{color:var(--green)} .toc .p2 .lbl{color:var(--rose)}
+@media (max-width:900px){.toc{display:none}}
+
+/* 머리 */
+.main{min-width:0;display:grid;gap:64px}
+.eyebrow{font-size:.78rem;letter-spacing:.14em;color:var(--muted)}
+.hero{display:grid;gap:18px}
+.hero h1{font-size:clamp(2.2rem,5.4vw,3.4rem);letter-spacing:-.01em}
+.lede{font-size:1.12rem;max-width:62ch;color:var(--ink)}
+.paths{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:8px}
+@media (max-width:640px){.paths{grid-template-columns:minmax(0,1fr)}}
+.path{display:grid;gap:8px;padding:20px 22px;border-radius:14px;background:var(--surface);border:1px solid var(--line);text-decoration:none;color:var(--ink)}
+.path:hover{border-color:currentColor}
+.path .tag{font-size:.78rem;letter-spacing:.08em;font-weight:700}
+.path.p1 .tag{color:var(--green)} .path.p2 .tag{color:var(--rose)}
+.path h2{font-size:1.35rem}
+.path .meta{font-size:.88rem;color:var(--muted)}
+.path .flow{font-size:.92rem}
+
+/* 흐름도 */
+.sec-head{display:grid;gap:8px;margin-bottom:20px}
+.sec-head h2{font-size:clamp(1.6rem,3.4vw,2.1rem)}
+.sec-head p{color:var(--muted);max-width:62ch}
+.pipe{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;align-items:stretch}
+.node{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:4px;align-content:start;min-width:0}
+.node b{font-size:1rem}
+.node span{font-size:.86rem;color:var(--muted);line-height:1.5}
+.node .ic{font-family:var(--f-mono);font-size:.8rem;color:var(--green)}
+.arrow{display:none}
+.pipe .link{position:relative}
+.pipe-wrap{display:grid;grid-template-columns:minmax(0,1fr) 54px minmax(0,1fr) 54px minmax(0,1fr) 54px minmax(0,1fr);align-items:center}
+.conn{display:grid;justify-items:center;gap:2px;font-size:.72rem;color:var(--muted);text-align:center;line-height:1.3;padding:0 2px}
+.conn svg{width:40px;height:14px;display:block}
+.conn svg path{stroke:var(--muted);fill:none;stroke-width:1.5}
+@media (max-width:760px){.pipe-wrap{grid-template-columns:minmax(0,1fr)}.conn{grid-auto-flow:column;gap:8px;padding:6px 0;justify-content:center}.conn svg{transform:rotate(90deg);width:28px}}
+.glossary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:18px}
+@media (max-width:760px){.glossary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.glossary div{border-top:2px solid var(--line);padding-top:8px;font-size:.88rem;line-height:1.55}
+.glossary dt{font-weight:700}
+.glossary dd{margin:2px 0 0;color:var(--muted)}
+
+/* 준비물 */
+.prep{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:640px){.prep{grid-template-columns:minmax(0,1fr)}}
+.prep > div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.prep h3{font-size:1.05rem;margin-bottom:6px}
+.prep ul{margin:0;padding-left:1.1em;display:grid;gap:4px;font-size:.94rem}
+
+/* 부 머리 */
+.part{display:grid;gap:40px}
+.part-head{display:grid;gap:10px;padding:26px 26px 24px;border-radius:16px}
+.part.p1 .part-head{background:var(--green-soft)}
+.part.p2 .part-head{background:var(--rose-soft)}
+.part-head .tag{font-size:.8rem;letter-spacing:.1em;font-weight:700}
+.part.p1 .tag{color:var(--green)} .part.p2 .tag{color:var(--rose)}
+.part-head h2{font-size:clamp(1.7rem,3.6vw,2.3rem)}
+.part-head p{max-width:64ch}
+
+/* 단계 */
+.step{display:grid;grid-template-columns:52px minmax(0,1fr);gap:4px 18px;scroll-margin-top:24px}
+.num{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-mono);font-weight:500;font-size:1.05rem;border:1.5px solid currentColor}
+.part.p1 .num{color:var(--green)} .part.p2 .num{color:var(--rose)}
+.step.done .num{background:currentColor}
+.step.done .num span{color:var(--surface)}
+.step-body{display:grid;gap:14px;min-width:0}
+.step-top{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;justify-content:space-between}
+.step h3{font-size:1.4rem;padding-top:6px}
+.check{display:inline-flex;gap:8px;align-items:center;font-size:.86rem;color:var(--muted);cursor:pointer;user-select:none}
+.check input{width:18px;height:18px;accent-color:var(--green)}
+.part.p2 .check input{accent-color:var(--rose)}
+.do{margin:0;padding-left:1.25em;display:grid;gap:8px}
+.do li::marker{color:var(--muted);font-family:var(--f-mono);font-size:.85em}
+.ui{display:inline-block;font-family:var(--f-body);font-size:.86em;font-weight:500;padding:.05em .6em;border-radius:6px;border:1px solid var(--line);background:var(--surface);white-space:nowrap;box-shadow:0 1px 0 var(--line)}
+.ko{color:var(--muted);font-size:.9em}
+.note{display:block;padding:12px 16px;border-radius:10px;font-size:.93rem;line-height:1.7;border:1px solid var(--line);background:var(--surface)}
+.note .lbl{display:block;margin-bottom:4px;font-size:.74rem;letter-spacing:.1em;font-weight:700;color:var(--green)}
+.note.warn{background:var(--warn-soft);border-color:transparent}
+.note.warn .lbl{color:var(--warn)}
+.part.p2 .note .lbl{color:var(--rose)}
+.part.p2 .note.warn .lbl{color:var(--warn)}
+
+/* 화면 예시 */
+.mock{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface);font-size:.88rem}
+.mock-bar{display:flex;gap:6px;align-items:center;padding:8px 12px;background:var(--sunk);border-bottom:1px solid var(--line);font-size:.75rem;color:var(--muted)}
+.mock-bar i{width:9px;height:9px;border-radius:50%;background:var(--line);display:inline-block}
+.mock-bar span{margin-left:8px;font-family:var(--f-mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.mock-body{padding:16px 18px;display:grid;gap:12px}
+.mock .row{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.mock .field{font-family:var(--f-mono);border:1px solid var(--line);border-radius:6px;padding:4px 10px;min-width:0;background:var(--bg)}
+.mock .flabel{font-weight:500;min-width:7.5em}
+.mock .btn{display:inline-block;padding:4px 14px;border-radius:6px;font-weight:500;background:var(--green);color:var(--surface)}
+.mock .sel{border:1px solid var(--line);border-radius:6px;padding:3px 10px;background:var(--bg)}
+.mock .radio{display:inline-flex;gap:6px;align-items:center}
+.mock .radio::before{content:"";width:12px;height:12px;border-radius:50%;border:1.5px solid var(--muted)}
+.mock .radio.on::before{border-color:var(--green);background:radial-gradient(circle,var(--green) 0 3px,transparent 3.5px)}
+.mock .drop{border:2px dashed var(--line);border-radius:10px;padding:22px;text-align:center;color:var(--muted)}
+.mock .live{background:var(--green-soft);border-radius:8px;padding:8px 12px}
+.mock-cap{font-size:.78rem;color:var(--muted);padding:0 18px 12px}
+
+/* 터미널 */
+.os-switch{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;background:var(--surface);gap:2px}
+.os-switch button{font:inherit;font-size:.88rem;border:0;border-radius:999px;padding:6px 16px;background:transparent;color:var(--ink);cursor:pointer}
+.os-switch button[aria-pressed="true"]{background:var(--rose);color:var(--surface)}
+.os-mac [data-os="win"],.os-win [data-os="mac"]{display:none!important}
+.term{position:relative;background:var(--term);color:var(--term-ink);border-radius:10px;border:1px solid var(--term-line)}
+.term .tlbl{font-size:.72rem;color:var(--term-muted);padding:8px 14px 0;letter-spacing:.06em}
+.term pre{margin:0;padding:8px 92px 14px 14px;overflow-x:auto;font-family:var(--f-mono);font-size:.88rem;line-height:1.65}
+.term pre .c{color:var(--term-muted)}
+.copy{position:absolute;top:8px;right:8px;font:inherit;font-size:.78rem;padding:4px 10px;border-radius:6px;border:1px solid var(--term-line);background:transparent;color:var(--term-ink);cursor:pointer}
+.copy:hover{border-color:var(--term-muted)}
+
+/* AI에게 하는 말 */
+.prompts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:700px){.prompts{grid-template-columns:minmax(0,1fr)}}
+.prompt{position:relative;display:grid;gap:8px;align-content:start;padding:16px 18px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--line)}
+.prompt .when{font-size:.76rem;letter-spacing:.06em;color:var(--rose);font-weight:700}
+.prompt q{quotes:none;font-size:.98rem;line-height:1.6}
+.prompt .copy{position:static;justify-self:start;border-color:var(--line);color:var(--ink)}
+.prompt .copy:hover{border-color:var(--rose)}
+
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:.9rem}
+th,td{text-align:left;vertical-align:top;padding:10px 14px;border-bottom:1px solid var(--line)}
+th{font-size:.76rem;letter-spacing:.08em;color:var(--muted);font-weight:500}
+tr:last-child td{border-bottom:0}
+td code{background:transparent;padding:0;white-space:nowrap}
+
+/* 문제 해결 */
+.faq{display:grid;gap:10px}
+.faq details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:0 18px}
+.faq summary{cursor:pointer;padding:14px 0;font-weight:500;list-style:none;display:flex;justify-content:space-between;gap:12px}
+.faq summary::after{content:"+";font-family:var(--f-mono);color:var(--muted)}
+.faq details[open] summary::after{content:"−"}
+.faq summary::-webkit-details-marker{display:none}
+.faq .ans{padding:0 0 16px;display:grid;gap:8px;font-size:.95rem}
+.faq ul{margin:0;padding-left:1.2em;display:grid;gap:4px}
+.safe{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:640px){.safe{grid-template-columns:minmax(0,1fr)}}
+.safe div{padding:16px 18px;border-radius:12px;background:var(--surface);border:1px solid var(--line);font-size:.94rem;display:grid;gap:4px}
+.safe b{font-family:var(--f-display);font-size:1.05rem}
+.links{display:grid;gap:6px;font-size:.95rem}
+.example{display:grid;gap:6px;padding:20px 22px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}
+.example .addr{font-family:var(--f-mono);font-size:.95rem;overflow-wrap:anywhere}
+footer{font-size:.85rem;color:var(--muted);border-top:1px solid var(--line);padding-top:20px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="page" id="top">
+  <nav class="toc" aria-label="목차">
+    <div><div class="lbl">시작 전에</div><ol><li><a href="#how"><span class="n">·</span><span class="t">어떻게 연결되나</span></a></li><li><a href="#prep"><span class="n">·</span><span class="t">준비물</span></a></li></ol></div>
+    <div class="p1"><div class="lbl">1부 · 웹에서 직접</div><ol id="toc-p1"></ol></div>
+    <div class="p2"><div class="lbl">2부 · AI에게 맡기기</div><ol id="toc-p2"></ol></div>
+    <div><div class="lbl">도움말</div><ol><li><a href="#prompts"><span class="n">·</span><span class="t">AI에게 하는 말 모음</span></a></li><li><a href="#faq"><span class="n">·</span><span class="t">자주 막히는 곳</span></a></li><li><a href="#safe"><span class="n">·</span><span class="t">안전하게 쓰기</span></a></li></ol></div>
+  </nav>
+
+  <main class="main">
+    <header class="hero">
+      <div class="eyebrow">미술 교사 연수 자료</div>
+      <h1>수업 게임 배포하기</h1>
+      <p class="lede">직접 만든 HTML 게임이나 수업 자료를, 학생들이 링크 하나로 열 수 있게 GitHub Pages에 올리는 방법입니다. 처음 한 번은 웹사이트에서 손으로 해 보면서 구조를 익히고, 그다음부터는 AI 코딩 도구에게 말로 맡깁니다.</p>
+      <div class="paths">
+        <a class="path p1" href="#s1"><span class="tag">1부 · 처음 한 번</span><h2>웹에서 직접 올리기</h2><span class="meta">설치 없음 · 약 20분</span><span class="flow">계정 만들기 → 저장소 만들기 → 파일 끌어다 놓기 → Pages 켜기</span></a>
+        <a class="path p2" href="#s6"><span class="tag">2부 · 그다음부터</span><h2>AI에게 배포 맡기기</h2><span class="meta">설치 한 번 · 그다음은 한 문장</span><span class="flow">Git·GitHub CLI 설치 → Claude Code 또는 Codex → “배포해 줘”</span></a>
+      </div>
+    </header>
+
+    <section id="how">
+      <div class="sec-head"><div class="eyebrow">시작 전에</div><h2>어떻게 연결되나요</h2><p>파일은 내 컴퓨터에서 GitHub 저장소로 올라가고, GitHub Pages가 그 저장소를 웹 주소로 열어 줍니다. 1부와 2부는 첫 번째 화살표, 곧 “올리는 방법”만 다릅니다.</p></div>
+      <div class="pipe-wrap">
+        <div class="node"><span class="ic">index.html</span><b>내 컴퓨터의 폴더</b><span>게임이나 수업 자료 파일</span></div>
+        <div class="conn"><svg viewBox="0 0 40 14" aria-hidden="true"><path d="M2 7h34M30 2l6 5-6 5"/></svg>올리기</div>
+        <div class="node"><span class="ic">github.com/아이디/저장소</span><b>GitHub 저장소</b><span>파일과 수정 기록을 보관하는 곳</span></div>
+        <div class="conn"><svg viewBox="0 0 40 14" aria-hidden="true"><path d="M2 7h34M30 2l6 5-6 5"/></svg>자동 배포<br>1~2분</div>
+        <div class="node"><span class="ic">아이디.github.io/저장소</span><b>GitHub Pages</b><span>저장소를 웹 주소로 공개</span></div>
+        <div class="conn"><svg viewBox="0 0 40 14" aria-hidden="true"><path d="M2 7h34M30 2l6 5-6 5"/></svg>링크 공유</div>
+        <div class="node"><span class="ic">태블릿 · 노트북 · 휴대폰</span><b>학생 브라우저</b><span>로그인 없이 바로 열림</span></div>
+      </div>
+      <dl class="glossary">
+        <div><dt>저장소 (repository)</dt><dd>프로젝트 하나를 담는 온라인 폴더</dd></div>
+        <div><dt>커밋 (commit)</dt><dd>“지금 이 상태로 저장”이라는 기록 한 번</dd></div>
+        <div><dt>푸시 (push)</dt><dd>내 컴퓨터의 커밋을 GitHub로 올리기</dd></div>
+        <div><dt>GitHub Pages</dt><dd>저장소의 HTML을 무료 웹사이트로 열어 주는 기능</dd></div>
+      </dl>
+    </section>
+
+    <section id="prep">
+      <div class="sec-head"><div class="eyebrow">시작 전에</div><h2>준비물</h2></div>
+      <div class="prep">
+        <div><h3>1부에 필요한 것</h3><ul><li>오래 쓸 이메일 주소 하나</li><li>올릴 파일. 첫 화면이 될 파일 이름은 반드시 <code>index.html</code></li><li>인터넷 브라우저 (크롬, 엣지, 사파리 등)</li></ul></div>
+        <div><h3>2부에 더 필요한 것</h3><ul><li>프로그램을 설치할 수 있는 컴퓨터 (학교 PC는 관리자 권한이 필요할 수 있음)</li><li>AI 코딩 도구 이용권: Claude 유료 플랜(Claude Code) 또는 ChatGPT 유료 플랜(Codex)</li><li>1부에서 만든 GitHub 계정</li></ul></div>
+      </div>
+    </section>
+
+    <!-- ==================== 1부 ==================== -->
+    <section class="part p1" id="part1">
+      <div class="part-head"><span class="tag">1부 · 처음 한 번</span><h2>웹에서 직접 올리기</h2><p>아무것도 설치하지 않고 github.com 화면에서만 진행합니다. GitHub 화면은 영어로 나오므로 눌러야 할 버튼 이름을 영어 그대로 적고, 뜻을 옆에 붙였습니다.</p></div>
+
+      <article class="step" id="s1" data-step="1">
+        <div class="num"><span>1</span></div>
+        <div class="step-body">
+          <div class="step-top"><h3>GitHub 계정 만들기</h3><label class="check"><input type="checkbox" id="chk-1"> 다 했어요</label></div>
+          <ol class="do">
+            <li><a href="https://github.com/signup" target="_blank" rel="noopener">github.com/signup</a>에 들어가 이메일, 비밀번호, 사용자 이름(<span class="ui">Username</span>)을 입력합니다.</li>
+            <li>이메일로 온 인증 코드를 입력하면 가입이 끝납니다.</li>
+            <li>2단계 인증 안내가 나오면 휴대폰 인증 앱이나 패스키로 설정합니다. 이때 나오는 <b>복구 코드</b>는 꼭 따로 저장해 두세요.</li>
+          </ol>
+          <div class="note"><span class="lbl">팁</span>사용자 이름이 곧 웹 주소가 됩니다. 사용자 이름이 <code>artteacher</code>라면 주소는 <code>artteacher.github.io/…</code>입니다. 짧은 영어 소문자로 정하세요.</div>
+        </div>
+      </article>
+
+      <article class="step" id="s2" data-step="2">
+        <div class="num"><span>2</span></div>
+        <div class="step-body">
+          <div class="step-top"><h3>저장소 만들기</h3><label class="check"><input type="checkbox" id="chk-2"> 다 했어요</label></div>
+          <ol class="do">
+            <li>로그인한 뒤 오른쪽 위 <span class="ui">+</span> → <span class="ui">New repository</span> <span class="ko">(새 저장소)</span>를 누릅니다.</li>
+            <li><span class="ui">Repository name</span>에 저장소 이름을 씁니다. 영어 소문자와 하이픈(-)만 쓰세요. 예: <code>giverny-light</code></li>
+            <li><span class="ui">Public</span> <span class="ko">(공개)</span>을 고릅니다. 무료 계정은 공개 저장소에서만 Pages를 쓸 수 있습니다.</li>
+            <li>나머지는 그대로 두고 <span class="ui">Create repository</span>를 누릅니다.</li>
+          </ol>
+          <figure class="mock" aria-label="새 저장소 만들기 화면 예시">
+            <div class="mock-bar"><i></i><i></i><i></i><span>github.com/new</span></div>
+            <div class="mock-body">
+              <div class="row"><span class="flabel">Repository name</span><span class="field">giverny-light</span></div>
+              <div class="row"><span class="radio on">Public</span><span class="radio">Private</span></div>
+              <div class="row"><span class="btn">Create repository</span></div>
+            </div>
+            <figcaption class="mock-cap">화면 예시입니다. 실제 화면은 조금 다를 수 있어요.</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <article class="step" id="s3" data-step="3">
+        <div class="num"><span>3</span></div>
+        <div class="step-body">
+          <div class="step-top"><h3>파일 끌어다 놓기</h3><label class="check"><input type="checkbox" id="chk-3"> 다 했어요</label></div>
+          <ol class="do">
+            <li>새 저장소 첫 화면에서 <span class="ui">uploading an existing file</span> 링크를 누릅니다. 저장소에 이미 파일이 있다면 <span class="ui">Add file</span> → <span class="ui">Upload files</span>입니다.</li>
+            <li>컴퓨터의 파일을 점선 상자에 끌어다 놓습니다. 그림이나 소리 파일이 든 폴더가 있으면 폴더째 끌어다 놓으세요. 폴더 구조가 그대로 올라갑니다.</li>
+            <li>아래쪽 <span class="ui">Commit changes</span> <span class="ko">(변경 사항 저장)</span>를 누릅니다.</li>
+          </ol>
+          <figure class="mock" aria-label="파일 올리기 화면 예시">
+            <div class="mock-bar"><i></i><i></i><i></i><span>github.com/아이디/giverny-light/upload</span></div>
+            <div class="mock-body">
+              <div class="drop">Drag files here to add them to your repository<br><span class="ko">여기에 파일을 끌어다 놓으세요</span></div>
+              <div class="row"><span class="btn">Commit changes</span></div>
+            </div>
+          </figure>
+          <div class="note warn"><span class="lbl">꼭 확인</span>첫 화면이 될 파일 이름은 반드시 소문자 <code>index.html</code>이어야 합니다. 브라우저 업로드는 파일 하나당 25MB, 한 번에 100개까지 올릴 수 있습니다.</div>
+        </div>
+      </article>
+
+      <article class="step" id="s4" data-step="4">
+        <div class="num"><span>4</span></div>
+        <div class="step-body">
+          <div class="step-top"><h3>GitHub Pages 켜기</h3><label class="check"><input type="checkbox" id="chk-4"> 다 했어요</label></div>
+          <ol class="do">
+            <li>저장소 위쪽 메뉴의 <span class="ui">Settings</span> → 왼쪽 메뉴 <span class="ui">Pages</span>로 갑니다.</li>
+            <li><span class="ui">Build and deployment</span>의 <span class="ui">Source</span>를 <span class="ui">Deploy from a branch</span>로 둡니다.</li>
+            <li><span class="ui">Branch</span>를 <span class="ui">main</span>, 폴더를 <span class="ui">/ (root)</span>로 고르고 <span class="ui">Save</span>를 누릅니다.</li>
+            <li>1~2분 뒤 새로고침하면 위쪽에 사이트 주소가 나타납니다. <span class="ui">Visit site</span>를 눌러 열어 보세요.</li>
+          </ol>
+          <figure class="mock" aria-label="Pages 설정 화면 예시">
+            <div class="mock-bar"><i></i><i></i><i></i><span>github.com/아이디/giverny-light/settings/pages</span></div>
+            <div class="mock-body">
+              <div class="live">Your site is live at <b>https://아이디.github.io/giverny-light/</b> <span class="ui">Visit site</span></div>
+              <div class="row"><span class="flabel">Source</span><span class="sel">Deploy from a branch ▾</span></div>
+              <div class="row"><span class="flabel">Branch</span><span class="sel">main ▾</span><span class="sel">/ (root) ▾</span><span class="btn">Save</span></div>
+            </div>
+          </figure>
+          <div class="note"><span class="lbl">주소 모양</span><code>https://사용자이름.github.io/저장소이름/</code> 배포가 진행 중인지는 저장소의 <span class="ui">Actions</span> 탭에서 볼 수 있습니다. “pages build and deployment” 옆에 초록 체크가 뜨면 끝난 것입니다.</div>
+        </div>
+      </article>
+
+      <article class="step" id="s5" data-step="5">
+        <div class="num"><span>5</span></div>
+        <div class="step-body">
+          <div class="step-top"><h3>고치고 다시 올리기</h3><label class="check"><input type="checkbox" id="chk-5"> 다 했어요</label></div>
+          <ol class="do">
+            <li>컴퓨터에서 파일을 고친 뒤 3단계처럼 <b>같은 이름으로</b> 다시 업로드하고 <span class="ui">Commit changes</span>를 누릅니다. 같은 이름의 파일은 새 파일로 바뀝니다.</li>
+            <li>글자 몇 개만 고칠 때는 저장소에서 파일을 열고 연필 모양 <span class="ui">Edit</span> 버튼으로 바로 고쳐도 됩니다.</li>
+            <li>1~2분 뒤 사이트에 반영됩니다. 그대로 보이면 강력 새로고침을 하세요. <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd> (Windows) 또는 <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd> (Mac).</li>
+          </ol>
+          <div class="note"><span class="lbl">여기까지 하고 나면</span>배포의 구조는 다 익혔습니다. 다만 고칠 때마다 업로드, 커밋, 확인을 반복해야 해서 번거롭습니다. 2부는 이 반복을 AI에게 맡기는 방법입니다.</div>
+        </div>
+      </article>
+    </section>
+
+    <!-- ==================== 2부 ==================== -->
+    <section class="part p2" id="part2">
+      <div class="part-head"><span class="tag">2부 · 그다음부터</span><h2>AI에게 배포 맡기기</h2><p>컴퓨터에 도구를 한 번 설치해 두면, 그다음부터는 AI 코딩 도구에게 “고쳤으니 배포해 줘”라고 말하는 것으로 1부의 일을 대신하게 할 수 있습니다. 명령어는 아래에서 복사해 터미널에 붙여 넣으면 됩니다.</p>
+        <div><span class="os-switch" role="group" aria-label="운영체제 고르기"><button type="button" data-set-os="win" aria-pressed="true">Windows</button><button type="button" data-set-os="mac" aria-pressed="false">Mac</button></span></div>
+      </div>
+
+      <article class="step" id="s6" data-step="6">
+        <div class="num"><span>6</span></div>
+        <div class="step-body">
+          <div class="step-top"><h3>터미널 열고 Git 설치하기</h3><label class="check"><input type="checkbox" id="chk-6"> 다 했어요</label></div>
+          <p data-os="win">시작 메뉴에서 <b>터미널</b>(또는 PowerShell)을 찾아 엽니다. 아래 명령을 붙여 넣고 <kbd>Enter</kbd>를 누르세요. 명령이 낯설면 <a href="https://git-scm.com/downloads" target="_blank" rel="noopener">git-scm.com</a>에서 설치 파일을 받아 기본값으로 설치해도 됩니다.</p>
+          <p data-os="mac"><kbd>Cmd</kbd>+<kbd>Space</kbd>로 Spotlight를 열고 <b>터미널</b>을 실행합니다. 아래 명령을 붙여 넣으면 Git이 들어 있는 개발자 도구 설치 창이 뜹니다. <span class="ui">설치</span>를 누르세요.</p>
+          <div class="term" data-os="win"><div class="tlbl">터미널 · Windows</div><pre>winget install --id Git.Git -e</pre><button class="copy" type="button">복사</button></div>
+          <div class="term" data-os="mac"><div class="tlbl">터미널 · Mac</div><pre>xcode-select --install</pre><button class="copy" type="button">복사</button></div>
+          <p>설치가 끝나면 터미널을 닫았다가 다시 열고, 설치됐는지 확인한 뒤 이름과 이메일을 한 번 등록합니다.</p>
+          <div class="term"><div class="tlbl">터미널 · 공통</div><pre>git --version
+git config --global user.name "홍길동"
+git config --global user.email "GitHub에 가입한 이메일"</pre><button class="copy" type="button">복사</button></div>
+          <div class="note"><span class="lbl">팁</span>개인 이메일이 기록에 남는 게 싫다면 GitHub의 <span class="ui">Settings</span> → <span class="ui">Emails</span>에 있는 <code>…@users.noreply.github.com</code> 주소를 대신 쓰세요.</div>
+        </div>
+      </article>
+
+      <article class="step" id="s7" data-step="7">
+        <div class="num"><span>7</span></div>
+        <div class="step-body">
+          <div class="step-top"><h3>GitHub CLI 설치하고 로그인하기</h3><label class="check"><input type="checkbox" id="chk-7"> 다 했어요</label></div>
+          <p>GitHub CLI(<code>gh</code>)는 터미널에서 GitHub를 다루는 공식 도구입니다. 여기서 한 번 로그인해 두면, AI가 비밀번호 없이 저장소를 만들고 파일을 올릴 수 있습니다.</p>
+          <div class="term" data-os="win"><div class="tlbl">터미널 · Windows</div><pre>winget install --id GitHub.cli -e</pre><button class="copy" type="button">복사</button></div>
+          <div class="term" data-os="mac"><div class="tlbl">터미널 · Mac (Homebrew가 있을 때)</div><pre>brew install gh</pre><button class="copy" type="button">복사</button></div>
+          <p data-os="mac">Homebrew가 없다면 <a href="https://cli.github.com" target="_blank" rel="noopener">cli.github.com</a>에서 Mac용 설치 파일을 받으세요.</p>
+          <p>터미널을 다시 연 뒤 로그인합니다. 질문이 나오면 차례로 <b>GitHub.com → HTTPS → Yes → Login with a web browser</b>를 고르고, 화면에 나온 8자리 코드를 브라우저에 입력해 승인합니다.</p>
+          <div class="term"><div class="tlbl">터미널 · 공통</div><pre>gh auth login
+gh auth status    <span class="c"># “Logged in to github.com” 이 보이면 성공</span></pre><button class="copy" type="button">복사</button></div>
+        </div>
+      </article>
+
+      <article class="step" id="s8" data-step="8">
+        <div class="num"><span>8</span></div>
+        <div class="step-body">
+          <div class="step-top"><h3>AI 코딩 도구 설치하기</h3><label class="check"><input type="checkbox" id="chk-8"> 다 했어요</label></div>
+          <p>둘 중 이용권이 있는 쪽 하나만 설치하면 됩니다. 처음 실행하면 브라우저가 열리고 각 서비스 계정으로 로그인합니다.</p>
+          <div class="prep">
+            <div><h3>Claude Code <span class="ko">(Anthropic)</span></h3><ul><li>Claude 유료 플랜 계정으로 로그인</li><li>실행: 터미널에서 <code>claude</code></li><li>터미널이 부담스러우면 Claude 데스크톱 앱에서도 쓸 수 있습니다</li></ul></div>
+            <div><h3>Codex <span class="ko">(OpenAI)</span></h3><ul><li>ChatGPT 유료 플랜 계정으로 로그인</li><li>먼저 <a href="https://nodejs.org" target="_blank" rel="noopener">nodejs.org</a>에서 Node.js LTS 설치</li><li>실행: 터미널에서 <code>codex</code></li></ul></div>
+          </div>
+          <div class="term" data-os="win"><div class="tlbl">Claude Code 설치 · Windows PowerShell</div><pre>irm https://claude.ai/install.ps1 | iex</pre><button class="copy" type="button">복사</button></div>
+          <div class="term" data-os="mac"><div class="tlbl">Claude Code 설치 · Mac</div><pre>curl -fsSL https://claude.ai/install.sh | bash</pre><button class="copy" type="button">복사</button></div>
+          <div class="term"><div class="tlbl">Codex 설치 · 공통 (Node.js 설치 후)</div><pre>npm install -g @openai/codex</pre><button class="copy" type="button">복사</button></div>
+          <div class="note warn"><span class="lbl">설치 명령은 바뀔 수 있어요</span>두 도구 모두 업데이트가 잦습니다. 명령이 안 되면 공식 안내를 확인하세요. <a href="https://code.claude.com/docs" target="_blank" rel="noopener">Claude Code 문서</a> · <a href="https://github.com/openai/codex" target="_blank" rel="noopener">Codex 안내</a></div>
+        </div>
+      </article>
+
+      <article class="step" id="s9" data-step="9">
+        <div class="num"><span>9</span></div>
+        <div class="step-body">
+          <div class="step-top"><h3>작업 폴더에서 AI 열기</h3><label class="check"><input type="checkbox" id="chk-9"> 다 했어요</label></div>
+          <ol class="do">
+            <li>바탕화면 같은 곳에 수업용 폴더를 만들고(예: <code>giverny-light</code>), 그 안에 <code>index.html</code>과 필요한 파일을 넣습니다.</li>
+            <li>터미널에 <code>cd</code>와 띄어쓰기 한 칸을 입력한 뒤, 그 폴더를 터미널 창에 끌어다 놓으면 폴더 경로가 자동으로 들어갑니다. <kbd>Enter</kbd>를 누르세요.<span data-os="win"> Windows 11에서는 폴더 빈 곳을 오른쪽 클릭해 <span class="ui">터미널에서 열기</span>를 눌러도 됩니다.</span></li>
+            <li>그 자리에서 <code>claude</code> 또는 <code>codex</code>를 입력해 실행합니다.</li>
+            <li>처음에는 “이 폴더에 어떤 파일이 있어?”라고 물어서, AI가 맞는 폴더를 보고 있는지 확인하세요.</li>
+          </ol>
+          <div class="term"><div class="tlbl">터미널 · 예시</div><pre>cd 여기에_폴더를_끌어다_놓기
+claude          <span class="c"># 또는 codex</span></pre><button class="copy" type="button">복사</button></div>
+        </div>
+      </article>
+
+      <article class="step" id="s10" data-step="10">
+        <div class="num"><span>10</span></div>
+        <div class="step-body">
+          <div class="step-top"><h3>말로 배포하기</h3><label class="check"><input type="checkbox" id="chk-10"> 다 했어요</label></div>
+          <p>아래처럼 무엇을, 어디에, 끝나면 무엇을 확인할지까지 한 번에 말하면 가장 잘 됩니다.</p>
+          <div class="prompt"><span class="when">처음 배포할 때</span><q>이 폴더에 있는 파일을 내 GitHub에 giverny-light라는 공개 저장소로 올리고 GitHub Pages로 배포해 줘. 끝나면 접속 주소를 열어서 잘 나오는지 확인하고 알려 줘.</q><button class="copy" type="button">복사</button></div>
+          <ol class="do">
+            <li>AI가 명령을 실행해도 되는지 물어보면 내용을 읽고 허락합니다. 특히 지우는 명령(<code>rm</code>, <code>delete</code>)은 한 번 더 확인하세요.</li>
+            <li>끝나면 AI가 알려 주는 주소를 열어 봅니다. 처음 배포는 1~2분 걸릴 수 있습니다.</li>
+            <li>다음부터는 파일을 고친 뒤 “고쳤어. 커밋하고 푸시해서 배포해 줘.” 한 줄이면 됩니다.</li>
+          </ol>
+          <h3 style="font-size:1.1rem;margin-top:6px">AI가 대신 실행하는 명령</h3>
+          <p class="ko" style="margin-top:-6px">외울 필요는 없습니다. AI가 무엇을 하는지 알아볼 수 있으면 충분합니다.</p>
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>하는 일</th><th>명령</th><th>뜻</th></tr></thead>
+            <tbody>
+              <tr><td>기록 시작</td><td><code>git init</code></td><td>이 폴더의 변경 기록을 시작</td></tr>
+              <tr><td>올릴 파일 고르기</td><td><code>git add .</code></td><td>폴더의 모든 파일을 다음 저장에 포함</td></tr>
+              <tr><td>저장하기</td><td><code>git commit -m "첫 배포"</code></td><td>지금 상태를 메모와 함께 저장 (1부의 Commit changes)</td></tr>
+              <tr><td>저장소 만들고 올리기</td><td><code>gh repo create giverny-light --public --source=. --push</code></td><td>공개 저장소를 만들고 바로 업로드 (1부의 2~3단계)</td></tr>
+              <tr><td>Pages 켜기</td><td><code>gh api -X POST repos/아이디/giverny-light/pages -f "source[branch]=main" -f "source[path]=/"</code></td><td>main 브랜치를 웹으로 공개 (1부의 4단계)</td></tr>
+              <tr><td>고친 것 올리기</td><td><code>git push</code></td><td>새 커밋을 GitHub로 보내면 Pages가 자동으로 다시 배포</td></tr>
+            </tbody>
+          </table></div>
+          <div class="note"><span class="lbl">1부에서 만든 저장소가 있다면</span>“내 GitHub 저장소 아이디/giverny-light를 이 폴더로 받아 와서, 앞으로 여기서 고치고 배포할 수 있게 해 줘.”라고 말하면 됩니다.</div>
+        </div>
+      </article>
+    </section>
+
+    <section id="prompts">
+      <div class="sec-head"><div class="eyebrow">도움말</div><h2>AI에게 하는 말 모음</h2><p>복사해서 쓰고, 저장소 이름이나 아이디만 바꾸세요.</p></div>
+      <div class="prompts">
+        <div class="prompt"><span class="when">고친 뒤 다시 배포</span><q>index.html을 고쳤어. 바뀐 내용을 커밋하고 푸시해서 사이트를 업데이트해 줘. 몇 분 뒤 실제 주소에서 바뀌었는지도 확인해 줘.</q><button class="copy" type="button">복사</button></div>
+        <div class="prompt"><span class="when">고치기와 배포를 한 번에</span><q>물의 정원 힌트 문구를 고등학생이 이해하기 쉽게 바꿔 줘. 바꾼 부분을 보여 주고, 내가 괜찮다고 하면 배포까지 해 줘.</q><button class="copy" type="button">복사</button></div>
+        <div class="prompt"><span class="when">웹에서 만든 저장소 이어 쓰기</span><q>내 GitHub 저장소 아이디/giverny-light를 이 폴더로 받아 와 줘. 앞으로 여기서 고치고 배포할 거야.</q><button class="copy" type="button">복사</button></div>
+        <div class="prompt"><span class="when">주소가 안 열릴 때</span><q>GitHub Pages 주소에 들어가면 404가 나와. 저장소와 Pages 설정을 확인해서 원인을 찾고 고쳐 줘.</q><button class="copy" type="button">복사</button></div>
+        <div class="prompt"><span class="when">이전 버전으로 되돌리기</span><q>어제 올린 버전으로 되돌려서 다시 배포해 줘. 무엇을 되돌렸는지 먼저 알려 줘.</q><button class="copy" type="button">복사</button></div>
+        <div class="prompt"><span class="when">설명 문서 만들기</span><q>이 게임을 다른 선생님이 쓸 수 있게 README.md에 수업 방법과 그림 출처를 정리해서 함께 올려 줘.</q><button class="copy" type="button">복사</button></div>
+      </div>
+    </section>
+
+    <section id="faq">
+      <div class="sec-head"><div class="eyebrow">도움말</div><h2>자주 막히는 곳</h2></div>
+      <div class="faq">
+        <details><summary>주소에 들어가면 404 페이지가 나와요</summary><div class="ans"><ul><li>처음 배포는 1~2분 걸립니다. 잠시 기다렸다가 새로고침하세요.</li><li>첫 화면 파일 이름이 정확히 소문자 <code>index.html</code>인지 확인하세요. <code>Index.html</code>이나 <code>index.htm</code>은 안 됩니다.</li><li><span class="ui">Settings</span> → <span class="ui">Pages</span>에서 Branch가 <span class="ui">main</span>, 폴더가 <span class="ui">/ (root)</span>인지 확인하세요.</li><li>주소 끝에 저장소 이름까지 들어갔는지 확인하세요. <code>아이디.github.io/저장소이름/</code></li></ul></div></details>
+        <details><summary>고쳤는데 사이트가 그대로예요</summary><div class="ans"><ul><li>강력 새로고침(<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd>, Mac은 <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd>)을 해 보세요.</li><li>저장소의 <span class="ui">Actions</span> 탭에서 배포가 끝났는지(초록 체크) 확인하세요.</li><li>고친 파일이 정말 커밋됐는지, 저장소 화면에서 파일을 열어 확인하세요.</li></ul></div></details>
+        <details><summary>Pages 메뉴에 업그레이드 안내만 나와요</summary><div class="ans"><p>저장소가 비공개(Private)여서 그렇습니다. <span class="ui">Settings</span> 맨 아래 <span class="ui">Danger Zone</span> → <span class="ui">Change visibility</span>에서 Public으로 바꾸세요. 공개해도 되는 파일만 들어 있는지 먼저 확인하세요.</p></div></details>
+        <details><summary>터미널에서 git이나 gh를 찾을 수 없다고 나와요</summary><div class="ans"><p>설치 직후에는 터미널이 새 프로그램을 아직 모릅니다. 터미널을 완전히 닫았다가 다시 여세요. 그래도 안 되면 6~7단계 설치를 다시 확인하세요.</p></div></details>
+        <details><summary>푸시가 거절됐다(rejected)고 나와요</summary><div class="ans"><p>웹 화면에서 파일을 직접 고친 뒤, 내 컴퓨터에서도 고쳐서 올리려 할 때 자주 생깁니다. AI에게 “GitHub에 있는 변경 사항을 먼저 받아서 합친 다음 다시 올려 줘.”라고 말하세요.</p></div></details>
+        <details><summary>파일이 너무 크다고 나와요</summary><div class="ans"><p>브라우저 업로드는 파일 하나당 25MB, Git으로 올릴 때는 100MB가 한도입니다. 영상은 압축하거나 동영상 사이트에 올리고 링크로 넣으세요. 이미지는 가로 1000~1500px 정도로 줄이면 충분합니다.</p></div></details>
+        <details><summary>학교 컴퓨터에 설치가 안 돼요</summary><div class="ans"><p>프로그램 설치에는 관리자 권한이 필요할 때가 많습니다. 학교 정보 담당 선생님과 상의하거나, 설치가 필요 없는 1부 방식으로 진행하세요.</p></div></details>
+      </div>
+    </section>
+
+    <section id="safe">
+      <div class="sec-head"><div class="eyebrow">도움말</div><h2>안전하게 쓰기</h2></div>
+      <div class="safe">
+        <div><b>공개 저장소는 누구나 봅니다</b><span>학생 이름, 얼굴 사진, 성적, 연락처 같은 개인정보는 넣지 마세요. 저장소의 수정 기록에도 남습니다.</span></div>
+        <div><b>그림과 음악의 저작권</b><span>퍼블릭 도메인(위키미디어 공용의 옛 명화 등)이나 직접 만든 자료를 쓰고, 출처를 README에 적어 두세요.</span></div>
+        <div><b>비밀번호와 토큰은 어디에도 붙여 넣지 않기</b><span>로그인은 <code>gh auth login</code>으로 끝냅니다. AI 채팅창이나 파일에 비밀번호, 토큰, API 키를 적지 마세요.</span></div>
+        <div><b>AI가 실행하려는 명령 읽기</b><span>허락하기 전에 무엇을 하려는지 확인하세요. 모르겠으면 “이 명령이 무슨 일을 하는지 먼저 설명해 줘.”라고 물어보면 됩니다.</span></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="sec-head"><div class="eyebrow">연수 예시</div><h2>이렇게 만들어졌어요</h2></div>
+      <div class="example">
+        <span>모네를 주제로 만든 3D 방탈출 「지베르니의 빛」을 이 방법으로 배포했습니다.</span>
+        <span class="addr">게임 주소 · <a href="https://ngryun.github.io/giverny-light/" target="_blank" rel="noopener">ngryun.github.io/giverny-light</a></span>
+        <span class="addr">저장소 · <a href="https://github.com/ngryun/giverny-light" target="_blank" rel="noopener">github.com/ngryun/giverny-light</a></span>
+      </div>
+      <div class="links" style="margin-top:20px">
+        <span class="eyebrow">공식 안내</span>
+        <a href="https://docs.github.com/ko/pages" target="_blank" rel="noopener">GitHub Pages 문서</a>
+        <a href="https://cli.github.com/manual/" target="_blank" rel="noopener">GitHub CLI 사용법</a>
+        <a href="https://code.claude.com/docs" target="_blank" rel="noopener">Claude Code 문서</a>
+        <a href="https://github.com/openai/codex" target="_blank" rel="noopener">Codex 안내</a>
+      </div>
+    </section>
+
+    <footer>체크 표시는 이 브라우저에만 저장됩니다. GitHub와 AI 도구의 화면과 설치 방법은 바뀔 수 있으니, 다르게 보이면 공식 안내를 함께 확인하세요.</footer>
+  </main>
+</div>
+
+<script>
+(() => {
+  const KEY = 'deploy-guide-v1';
+  let st = {};
+  try { st = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { st = {}; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+
+  // 목차 만들기
+  document.querySelectorAll('.step').forEach(s => {
+    const n = s.dataset.step, t = s.querySelector('h3').textContent, li = document.createElement('li');
+    li.innerHTML = `<a href="#${s.id}" data-toc="${n}"><span class="n">${n}</span><span class="t"></span></a>`;
+    li.querySelector('.t').textContent = t;
+    document.getElementById(+n <= 5 ? 'toc-p1' : 'toc-p2').append(li);
+  });
+
+  // 단계 체크
+  const mark = (n, on) => { document.querySelector(`.step[data-step="${n}"]`).classList.toggle('done', on); const a = document.querySelector(`[data-toc="${n}"]`); if (a) a.classList.toggle('done', on); };
+  document.querySelectorAll('.check input').forEach(cb => {
+    const n = cb.id.replace('chk-', ''); cb.checked = !!(st.done && st.done[n]); mark(n, cb.checked);
+    cb.addEventListener('change', () => { st.done = st.done || {}; st.done[n] = cb.checked; save(); mark(n, cb.checked); });
+  });
+
+  // 운영체제 전환
+  const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+  const setOS = os => { document.documentElement.classList.toggle('os-mac', os === 'mac'); document.documentElement.classList.toggle('os-win', os !== 'mac'); document.querySelectorAll('[data-set-os]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.setOs === os))); };
+  setOS(st.os || (isMac ? 'mac' : 'win'));
+  document.querySelectorAll('[data-set-os]').forEach(b => b.addEventListener('click', () => { st.os = b.dataset.setOs; save(); setOS(st.os); }));
+
+  // 복사
+  document.querySelectorAll('.copy').forEach(btn => btn.addEventListener('click', () => {
+    const box = btn.closest('.term, .prompt'), src = box.querySelector('pre, q');
+    const text = src.tagName === 'PRE' ? [...src.childNodes].map(n => n.nodeType === 3 ? n.textContent : (n.classList && n.classList.contains('c') ? '' : n.textContent)).join('').split('\n').map(l => l.replace(/\s+$/, '')).join('\n').trim() : src.textContent.trim();
+    const done = msg => { const old = btn.textContent; btn.textContent = msg; setTimeout(() => { btn.textContent = old; }, 1400); };
+    const fallback = () => { const r = document.createRange(); r.selectNodeContents(src); const s = getSelection(); s.removeAllRanges(); s.addRange(r); done('선택됨 · Ctrl+C'); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => done('복사됨'), fallback); else fallback();
+  }));
+})();
+</script>
